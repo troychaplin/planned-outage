@@ -1,0 +1,16 @@
+{
+	"name": "block-theme-maintenance",
+	"version": "1.0.0",
+	"description": "Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.",
+	"author": "Troy Chaplin",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"lint": "composer run lint",
+		"format": "composer format",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^10.35.0",
+		"husky": "^9.1.7"
+	}
+}

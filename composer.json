@@ -1,0 +1,19 @@
+{
+	"name": "troychaplin/block-theme-maintenance",
+	"version": "1.0.0",
+	"description": "Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require-dev": {
+		"wp-coding-standards/wpcs": "^3.2"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"scripts": {
+		"format": "phpcbf",
+		"lint": "phpcs"
+	}
+}
