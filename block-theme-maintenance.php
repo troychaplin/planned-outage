@@ -160,9 +160,9 @@ class Block_Theme_Maintenance_Mode {
 					</tr>
 				</table>
 
-				<div class="card" style="max-width: 600px; margin-top: 20px;">
-					<h3 style="margin-top: 0;">SEO Recommendations</h3>
-					<ul style="list-style: disc; margin-left: 20px;">
+				<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
+					<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
+					<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
 						<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
 						<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
 						<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
