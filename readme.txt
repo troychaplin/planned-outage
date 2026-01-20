@@ -20,7 +20,10 @@ Block Theme Maintenance Mode is a lightweight plugin that enables maintenance mo
 * Uses native block theme templates
 * Create maintenance pages in the Site Editor or as theme files
 * Logged-in users bypass maintenance mode
+* Configurable expected duration (Retry-After header)
+* Optional search engine bot access during maintenance
 * Admin bar indicator when maintenance mode is active
+* Duration warning after 3 days of maintenance
 * Returns proper 503 status code for SEO
 
 **Requirements:**
@@ -46,7 +49,15 @@ You have two options:
 
 = Who can see the site when maintenance mode is enabled? =
 
-All logged-in users can browse the site normally. Only logged-out visitors see the maintenance template.
+All logged-in users can browse the site normally. Only logged-out visitors see the maintenance template. You can also enable search engine bots to bypass maintenance mode.
+
+= What is the Expected Duration setting? =
+
+This sets the Retry-After HTTP header, which tells search engines how long to wait before checking your site again. Options range from 30 minutes to 1 day.
+
+= Should I enable Search Engine Access? =
+
+For short maintenance periods (under 2 hours), the default settings are fine. For longer maintenance (over 2 hours), consider enabling search engine access. For maintenance lasting more than a day, always enable it to prevent pages from being removed from search indexes.
 
 = What status code is returned? =
 
@@ -54,7 +65,7 @@ The plugin returns a 503 (Service Unavailable) status with a Retry-After header,
 
 = How to uninstall the plugin? =
 
-Simply deactivate and delete the plugin. The plugin stores a single option (`btmm_enabled`) which is removed when you delete the plugin.
+Simply deactivate and delete the plugin. The plugin stores options prefixed with `btmm_` which are removed when you delete the plugin.
 
 == Changelog ==
 

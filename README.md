@@ -21,12 +21,27 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
    - In the Site Editor (Appearance > Editor > Templates), create a new template named "maintenance"
    - Add a `maintenance.html` file to your theme's `/templates/` folder
 2. Go to Settings > Maintenance Mode
-3. Enable maintenance mode
+3. Configure your options and enable maintenance mode
 
-When enabled:
+### Options
+
+- **Enable Maintenance Mode** - Activate maintenance mode for logged-out visitors
+- **Expected Duration** - Set the Retry-After header value (30 minutes to 1 day) to tell search engines when to check back
+- **Search Engine Access** - Allow search engine bots to bypass maintenance mode and continue crawling your site
+
+### SEO Recommendations
+
+- **Under 2 hours:** Default settings are fine
+- **2-24 hours:** Consider enabling search engine access
+- **Over 1 day:** Always enable search engine access to prevent pages from being removed from search indexes
+
+### When Enabled
+
 - Logged-out visitors see the maintenance template with a 503 status
 - Logged-in users can browse the site normally
+- Search engine bots can optionally bypass maintenance mode
 - An admin bar notice indicates maintenance mode is active
+- A warning appears after 3 days if maintenance mode is still enabled
 
 ## Development
 
