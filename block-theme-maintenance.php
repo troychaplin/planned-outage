@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main plugin class for Block Theme Maintenance.
  */
-class Block_Theme_Maintenance_Mode {
+class BTMM_Maintenance_Mode {
 
 	/**
 	 * List of search engine bot user agent strings to detect.
@@ -66,7 +66,15 @@ class Block_Theme_Maintenance_Mode {
 	 * Registers the plugin settings.
 	 */
 	public function register_settings() {
-		register_setting( 'block_theme_maintenance', 'btmm_enabled' );
+		register_setting(
+			'block_theme_maintenance',
+			'btmm_enabled',
+			array(
+				'type'              => 'boolean',
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
 		register_setting(
 			'block_theme_maintenance',
 			'btmm_retry_after',
@@ -76,12 +84,21 @@ class Block_Theme_Maintenance_Mode {
 				'sanitize_callback' => 'absint',
 			)
 		);
-		register_setting( 'block_theme_maintenance', 'btmm_allow_bots' );
+		register_setting(
+			'block_theme_maintenance',
+			'btmm_allow_bots',
+			array(
+				'type'              => 'boolean',
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
 		register_setting(
 			'block_theme_maintenance',
 			'btmm_enabled_at',
 			array(
-				'type' => 'integer',
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
 			)
 		);
 	}
@@ -318,4 +335,4 @@ class Block_Theme_Maintenance_Mode {
 	}
 }
 
-new Block_Theme_Maintenance_Mode();
+new BTMM_Maintenance_Mode();
