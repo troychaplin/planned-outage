@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       Block Theme Maintenance
+ * Plugin Name:       Downtime
  * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.
  * Requires at least: 6.3
  * Requires PHP:      7.0
@@ -8,9 +8,9 @@
  * Author:            Troy Chaplin
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       block-theme-maintenance
+ * Text Domain:       downtime
  *
- * @package Block_Theme_Maintenance
+ * @package Downtime
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Main plugin class for Block Theme Maintenance.
+ * Main plugin class for Downtime: Block Theme Maintenance Mode.
  */
-class BTMM_Maintenance_Mode {
+class DTMM_Maintenance_Mode {
 
 	/**
 	 * List of search engine bot user agent strings to detect.
@@ -57,7 +57,7 @@ class BTMM_Maintenance_Mode {
 			'Maintenance Mode',
 			'Maintenance Mode',
 			'manage_options',
-			'btmm-maintenance',
+			'dtmm-maintenance',
 			array( $this, 'settings_page' )
 		);
 	}
@@ -67,8 +67,8 @@ class BTMM_Maintenance_Mode {
 	 */
 	public function register_settings() {
 		register_setting(
-			'btmm_settings',
-			'btmm_enabled',
+			'dtmm_settings',
+			'dtmm_enabled',
 			array(
 				'type'              => 'boolean',
 				'default'           => false,
@@ -76,8 +76,8 @@ class BTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'btmm_settings',
-			'btmm_retry_after',
+			'dtmm_settings',
+			'dtmm_retry_after',
 			array(
 				'type'              => 'integer',
 				'default'           => 3600,
@@ -85,8 +85,8 @@ class BTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'btmm_settings',
-			'btmm_allow_bots',
+			'dtmm_settings',
+			'dtmm_allow_bots',
 			array(
 				'type'              => 'boolean',
 				'default'           => false,
@@ -94,8 +94,8 @@ class BTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'btmm_settings',
-			'btmm_enabled_at',
+			'dtmm_settings',
+			'dtmm_enabled_at',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
@@ -107,18 +107,18 @@ class BTMM_Maintenance_Mode {
 	 * Renders the settings page HTML.
 	 */
 	public function settings_page() {
-		$enabled     = get_option( 'btmm_enabled', false );
-		$retry_after = get_option( 'btmm_retry_after', 3600 );
-		$allow_bots  = get_option( 'btmm_allow_bots', false );
+		$enabled     = get_option( 'dtmm_enabled', false );
+		$retry_after = get_option( 'dtmm_retry_after', 3600 );
+		$allow_bots  = get_option( 'dtmm_allow_bots', false );
 		$template    = $this->get_maintenance_template();
 
 		// Track when maintenance was enabled.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
-		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'btmm_enabled_at' ) ) {
-			update_option( 'btmm_enabled_at', time() );
+		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'dtmm_enabled_at' ) ) {
+			update_option( 'dtmm_enabled_at', time() );
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
 		} elseif ( isset( $_GET['settings-updated'] ) && ! $enabled ) {
-			delete_option( 'btmm_enabled_at' );
+			delete_option( 'dtmm_enabled_at' );
 		}
 		?>
 		<div class="wrap">
@@ -139,13 +139,13 @@ class BTMM_Maintenance_Mode {
 			<?php endif; ?>
 
 			<form method="post" action="options.php">
-				<?php settings_fields( 'btmm_settings' ); ?>
+				<?php settings_fields( 'dtmm_settings' ); ?>
 				<table class="form-table">
 					<tr>
 						<th scope="row">Enable Maintenance Mode</th>
 						<td>
 							<label>
-								<input type="checkbox" name="btmm_enabled" value="1" <?php checked( $enabled, 1 ); ?> <?php disabled( ! $template ); ?>>
+								<input type="checkbox" name="dtmm_enabled" value="1" <?php checked( $enabled, 1 ); ?> <?php disabled( ! $template ); ?>>
 								Activate maintenance mode for logged-out visitors
 							</label>
 						</td>
@@ -153,7 +153,7 @@ class BTMM_Maintenance_Mode {
 					<tr>
 						<th scope="row">Expected Duration</th>
 						<td>
-							<select name="btmm_retry_after">
+							<select name="dtmm_retry_after">
 								<option value="1800" <?php selected( $retry_after, 1800 ); ?>>30 minutes</option>
 								<option value="3600" <?php selected( $retry_after, 3600 ); ?>>1 hour</option>
 								<option value="7200" <?php selected( $retry_after, 7200 ); ?>>2 hours</option>
@@ -169,7 +169,7 @@ class BTMM_Maintenance_Mode {
 						<th scope="row">Search Engine Access</th>
 						<td>
 							<label>
-								<input type="checkbox" name="btmm_allow_bots" value="1" <?php checked( $allow_bots, 1 ); ?>>
+								<input type="checkbox" name="dtmm_allow_bots" value="1" <?php checked( $allow_bots, 1 ); ?>>
 								Allow search engine bots to bypass maintenance mode
 							</label>
 							<p class="description">Recommended for maintenance lasting more than a few hours. Lets search engines continue crawling your site normally while visitors see the maintenance page.</p>
@@ -244,7 +244,7 @@ class BTMM_Maintenance_Mode {
 	 * @return string The template path to use.
 	 */
 	public function maybe_show_maintenance( $template ) {
-		if ( ! get_option( 'btmm_enabled', false ) ) {
+		if ( ! get_option( 'dtmm_enabled', false ) ) {
 			return $template;
 		}
 
@@ -259,7 +259,7 @@ class BTMM_Maintenance_Mode {
 		}
 
 		// Allow search engine bots through if enabled.
-		if ( get_option( 'btmm_allow_bots', false ) && $this->is_search_engine_bot() ) {
+		if ( get_option( 'dtmm_allow_bots', false ) && $this->is_search_engine_bot() ) {
 			return $template;
 		}
 
@@ -271,7 +271,7 @@ class BTMM_Maintenance_Mode {
 
 		nocache_headers();
 		status_header( 503 );
-		header( 'Retry-After: ' . absint( get_option( 'btmm_retry_after', 3600 ) ) );
+		header( 'Retry-After: ' . absint( get_option( 'dtmm_retry_after', 3600 ) ) );
 
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		global $_wp_current_template_content;
@@ -287,15 +287,15 @@ class BTMM_Maintenance_Mode {
 	 * @param WP_Admin_Bar $wp_admin_bar The admin bar instance.
 	 */
 	public function admin_bar_notice( $wp_admin_bar ) {
-		if ( ! get_option( 'btmm_enabled', false ) ) {
+		if ( ! get_option( 'dtmm_enabled', false ) ) {
 			return;
 		}
 
 		$wp_admin_bar->add_node(
 			array(
-				'id'    => 'btmm-notice',
+				'id'    => 'dtmm-notice',
 				'title' => '🚧 Maintenance Mode Active',
-				'href'  => admin_url( 'options-general.php?page=btmm-maintenance' ),
+				'href'  => admin_url( 'options-general.php?page=dtmm-maintenance' ),
 			)
 		);
 	}
@@ -304,11 +304,11 @@ class BTMM_Maintenance_Mode {
 	 * Displays an admin warning when maintenance mode has been active for too long.
 	 */
 	public function duration_warning() {
-		if ( ! get_option( 'btmm_enabled', false ) ) {
+		if ( ! get_option( 'dtmm_enabled', false ) ) {
 			return;
 		}
 
-		$enabled_at = get_option( 'btmm_enabled_at', 0 );
+		$enabled_at = get_option( 'dtmm_enabled_at', 0 );
 
 		if ( ! $enabled_at ) {
 			return;
@@ -317,14 +317,14 @@ class BTMM_Maintenance_Mode {
 		$days_active = floor( ( time() - $enabled_at ) / DAY_IN_SECONDS );
 
 		if ( $days_active >= 3 ) {
-			$allow_bots = get_option( 'btmm_allow_bots', false );
+			$allow_bots = get_option( 'dtmm_allow_bots', false );
 			?>
 			<div class="notice notice-warning">
 				<p>
 					<strong>Maintenance Mode Warning:</strong>
 					Your site has been in maintenance mode for <?php echo absint( $days_active ); ?> days.
 					<?php if ( ! $allow_bots ) : ?>
-						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=btmm-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
+						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=dtmm-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
 					<?php else : ?>
 						Extended maintenance periods can still affect your search rankings.
 					<?php endif; ?>
@@ -335,4 +335,4 @@ class BTMM_Maintenance_Mode {
 	}
 }
 
-new BTMM_Maintenance_Mode();
+new DTMM_Maintenance_Mode();

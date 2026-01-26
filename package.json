@@ -1,5 +1,5 @@
 {
-	"name": "block-theme-maintenance",
+	"name": "downtime",
 	"version": "1.0.0",
 	"description": "Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.",
 	"author": "Troy Chaplin",

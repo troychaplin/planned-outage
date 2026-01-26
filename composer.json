@@ -1,5 +1,5 @@
 {
-	"name": "troychaplin/block-theme-maintenance",
+	"name": "troychaplin/downtime",
 	"version": "1.0.0",
 	"description": "Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.",
 	"type": "wordpress-plugin",

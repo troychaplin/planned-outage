@@ -1,7 +1,7 @@
 <?php return array(
     'root' => array(
-        'name' => 'troychaplin/block-theme-maintenance',
-        'pretty_version' => '1.0.0+no-version-set',
+        'name' => 'troychaplin/downtime',
+        'pretty_version' => '1.0.0',
         'version' => '1.0.0.0',
         'reference' => null,
         'type' => 'wordpress-plugin',
@@ -46,8 +46,8 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
-        'troychaplin/block-theme-maintenance' => array(
-            'pretty_version' => '1.0.0+no-version-set',
+        'troychaplin/downtime' => array(
+            'pretty_version' => '1.0.0',
             'version' => '1.0.0.0',
             'reference' => null,
             'type' => 'wordpress-plugin',

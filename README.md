@@ -1,6 +1,6 @@
-<img src="assets/banner-772x250.png" alt="Block Theme Maintenance Plugin Banner" style="width: 100%; height: auto;">
+<img src="assets/banner-772x250.png" alt="Downtime: Block Theme Maintenance Plugin Banner" style="width: 100%; height: auto;">
 
-# Block Theme Maintenance Mode
+# Downtime: Block Theme Maintenance Mode
 
 Simple maintenance mode for block themes. Shows a maintenance template to logged-out visitors while allowing logged-in users to browse normally.
 
@@ -12,7 +12,7 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 
 ## Installation
 
-1. Upload the plugin files to `/wp-content/plugins/block-theme-maintenance`
+1. Upload the plugin files to `/wp-content/plugins/downtime`
 2. Activate the plugin through the Plugins screen in WordPress
 
 ## Usage

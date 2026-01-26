@@ -1,4 +1,4 @@
-=== Block Theme Maintenance ===
+=== Downtime ===
 
 Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
@@ -13,7 +13,7 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 
 == Description ==
 
-Block Theme Maintenance Mode is a lightweight plugin that enables maintenance mode for WordPress block themes. When enabled, logged-out visitors see your custom maintenance template while logged-in users can browse the site normally.
+Downtime: Block Theme Maintenance Mode is a lightweight plugin that enables maintenance mode for WordPress block themes. When enabled, logged-out visitors see your custom maintenance template while logged-in users can browse the site normally.
 
 **Features:**
 
@@ -65,7 +65,7 @@ The plugin returns a 503 (Service Unavailable) status with a Retry-After header,
 
 = How to uninstall the plugin? =
 
-Simply deactivate and delete the plugin. The plugin stores options prefixed with `btmm_` which are removed when you delete the plugin.
+Simply deactivate and delete the plugin. The plugin stores options prefixed with `dtmm_` which are removed when you delete the plugin.
 
 == Changelog ==
 
