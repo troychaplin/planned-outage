@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Downtime
- * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.
+ * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html and style to match your brand.
  * Requires at least: 6.3
  * Requires PHP:      7.0
  * Version:           1.0.0
@@ -54,8 +54,8 @@ class DTMM_Maintenance_Mode {
 	 */
 	public function add_admin_menu() {
 		add_options_page(
-			'Maintenance Mode',
-			'Maintenance Mode',
+			'Downtime',
+			'Downtime',
 			'manage_options',
 			'dtmm-maintenance',
 			array( $this, 'settings_page' )
@@ -66,6 +66,15 @@ class DTMM_Maintenance_Mode {
 	 * Registers the plugin settings.
 	 */
 	public function register_settings() {
+		// Handle reset tracking action.
+		if ( isset( $_POST['dtmm_reset_tracking'] ) && check_admin_referer( 'dtmm_reset_tracking_action' ) ) {
+			if ( get_option( 'dtmm_enabled', false ) ) {
+				update_option( 'dtmm_enabled_at', time() );
+			} else {
+				delete_option( 'dtmm_enabled_at' );
+			}
+			add_settings_error( 'dtmm_settings', 'tracking_reset', 'Duration tracking has been reset.', 'success' );
+		}
 		register_setting(
 			'dtmm_settings',
 			'dtmm_enabled',
@@ -122,7 +131,7 @@ class DTMM_Maintenance_Mode {
 		}
 		?>
 		<div class="wrap">
-			<h1>Maintenance Mode</h1>
+			<h1>Downtime: Block Theme Maintenance Mode</h1>
 
 			<?php if ( ! $template ) : ?>
 				<div class="notice notice-error">
@@ -177,17 +186,30 @@ class DTMM_Maintenance_Mode {
 					</tr>
 				</table>
 
-				<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
-					<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
-					<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
-						<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
-						<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
-						<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
-					</ul>
-				</div>
-
 				<?php submit_button(); ?>
 			</form>
+
+			<?php $enabled_at = get_option( 'dtmm_enabled_at', 0 ); ?>
+			<?php if ( $enabled_at ) : ?>
+				<hr style="margin: 30px 0;">
+				<h2>Duration Tracking</h2>
+				<p>Maintenance mode was enabled on: <strong><?php echo esc_html( wp_date( 'F j, Y \a\t g:i a', $enabled_at ) ); ?></strong></p>
+				<p class="description">If this date is incorrect (e.g., from a previous maintenance period), you can reset it.</p>
+				<form method="post" style="margin-top: 10px;">
+					<?php wp_nonce_field( 'dtmm_reset_tracking_action' ); ?>
+					<input type="hidden" name="dtmm_reset_tracking" value="1">
+					<?php submit_button( 'Reset Duration Tracking', 'secondary', 'submit', false ); ?>
+				</form>
+			<?php endif; ?>
+
+			<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
+				<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
+				<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
+					<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
+					<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
+					<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
+				</ul>
+			</div>
 		</div>
 		<?php
 	}
@@ -336,3 +358,12 @@ class DTMM_Maintenance_Mode {
 }
 
 new DTMM_Maintenance_Mode();
+
+/**
+ * Clears duration tracking on plugin deactivation.
+ */
+function dtmm_deactivate() {
+	delete_option( 'dtmm_enabled' );
+	delete_option( 'dtmm_enabled_at' );
+}
+register_deactivation_hook( __FILE__, 'dtmm_deactivate' );
