@@ -76,6 +76,12 @@ class Planned_Outage {
 			}
 			add_settings_error( 'pobt_settings', 'tracking_reset', 'Duration tracking has been reset.', 'success' );
 		}
+
+		// Handle regenerate bypass link action.
+		if ( isset( $_POST['pobt_regenerate_bypass'] ) && check_admin_referer( 'pobt_regenerate_bypass_action' ) ) {
+			update_option( 'pobt_bypass_key', wp_generate_password( 32, false ) );
+			add_settings_error( 'pobt_settings', 'bypass_regenerated', 'Bypass link has been regenerated. The previous link will no longer work.', 'success' );
+		}
 		register_setting(
 			'pobt_settings',
 			'pobt_enabled',
@@ -111,16 +117,26 @@ class Planned_Outage {
 				'sanitize_callback' => 'absint',
 			)
 		);
+		register_setting(
+			'pobt_settings',
+			'pobt_bypass_enabled',
+			array(
+				'type'              => 'boolean',
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
 	}
 
 	/**
 	 * Renders the settings page HTML.
 	 */
 	public function settings_page() {
-		$enabled     = get_option( 'pobt_enabled', false );
-		$retry_after = get_option( 'pobt_retry_after', 3600 );
-		$allow_bots  = get_option( 'pobt_allow_bots', false );
-		$template    = $this->get_maintenance_template();
+		$enabled        = get_option( 'pobt_enabled', false );
+		$retry_after    = get_option( 'pobt_retry_after', 3600 );
+		$allow_bots     = get_option( 'pobt_allow_bots', false );
+		$bypass_enabled = get_option( 'pobt_bypass_enabled', false );
+		$template       = $this->get_maintenance_template();
 
 		// Track when maintenance was enabled.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
@@ -129,6 +145,15 @@ class Planned_Outage {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
 		} elseif ( isset( $_GET['settings-updated'] ) && ! $enabled ) {
 			delete_option( 'pobt_enabled_at' );
+		}
+
+		// Generate or remove bypass key based on setting.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
+		if ( isset( $_GET['settings-updated'] ) && $bypass_enabled && ! get_option( 'pobt_bypass_key' ) ) {
+			update_option( 'pobt_bypass_key', wp_generate_password( 32, false ) );
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
+		} elseif ( isset( $_GET['settings-updated'] ) && ! $bypass_enabled ) {
+			delete_option( 'pobt_bypass_key' );
 		}
 		?>
 		<div class="wrap">
@@ -185,10 +210,40 @@ class Planned_Outage {
 							<p class="description">Recommended for maintenance lasting more than a few hours. Lets search engines continue crawling your site normally while visitors see the maintenance page.</p>
 						</td>
 					</tr>
+					<tr>
+						<th scope="row">Bypass Link</th>
+						<td>
+							<label>
+								<input type="checkbox" name="pobt_bypass_enabled" value="1" <?php checked( $bypass_enabled, 1 ); ?>>
+								Allow non-logged-in users to bypass maintenance mode via a secret link
+							</label>
+							<p class="description">When enabled, a unique URL is generated that lets anyone with the link browse the site normally during maintenance.</p>
+							<?php
+							$bypass_key = get_option( 'pobt_bypass_key' );
+							if ( $bypass_enabled && $bypass_key ) :
+								$bypass_url = add_query_arg( 'pobt_bypass', $bypass_key, home_url( '/' ) );
+								?>
+								<div style="margin-top: 10px; padding: 10px; background: #f0f0f1; border-left: 4px solid #2271b1;">
+									<p style="margin: 0 0 6px 0;"><strong>Bypass URL:</strong></p>
+									<code style="display: block; padding: 6px 8px; background: #fff; word-break: break-all;"><?php echo esc_url( $bypass_url ); ?></code>
+									<p class="description" style="margin-top: 6px;">Share this link with anyone who needs to view the site during maintenance. The link sets a cookie so they can navigate freely for 12 hours.</p>
+								</div>
+							<?php endif; ?>
+						</td>
+					</tr>
 				</table>
 
 				<?php submit_button(); ?>
 			</form>
+
+			<?php if ( $bypass_enabled && get_option( 'pobt_bypass_key' ) ) : ?>
+				<form method="post" style="margin-top: 10px;">
+					<?php wp_nonce_field( 'pobt_regenerate_bypass_action' ); ?>
+					<input type="hidden" name="pobt_regenerate_bypass" value="1">
+					<?php submit_button( 'Regenerate Bypass Link', 'secondary', 'submit', false ); ?>
+					<p class="description" style="margin-top: 6px;">Generate a new bypass link. The previous link will stop working immediately.</p>
+				</form>
+			<?php endif; ?>
 
 			<?php $enabled_at = get_option( 'pobt_enabled_at', 0 ); ?>
 			<?php if ( $enabled_at ) : ?>
@@ -248,6 +303,46 @@ class Planned_Outage {
 	}
 
 	/**
+	 * Checks if the current visitor has bypass access via query param or cookie.
+	 *
+	 * Sets a cookie on first valid access so subsequent page loads don't need the query param.
+	 *
+	 * @return bool True if the visitor has a valid bypass token.
+	 */
+	private function has_bypass_access() {
+		$bypass_key = get_option( 'pobt_bypass_key' );
+
+		if ( ! $bypass_key ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a public-facing bypass token, not a form submission.
+		$query_token  = isset( $_GET['pobt_bypass'] ) ? sanitize_text_field( wp_unslash( $_GET['pobt_bypass'] ) ) : '';
+		$cookie_token = isset( $_COOKIE['pobt_bypass'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['pobt_bypass'] ) ) : '';
+
+		if ( hash_equals( $bypass_key, $query_token ) || hash_equals( $bypass_key, $cookie_token ) ) {
+			// Set cookie if not already present or if arriving via query param.
+			if ( $query_token && ( ! $cookie_token || ! hash_equals( $bypass_key, $cookie_token ) ) ) {
+				setcookie(
+					'pobt_bypass',
+					$bypass_key,
+					array(
+						'expires'  => time() + ( 12 * HOUR_IN_SECONDS ),
+						'path'     => '/',
+						'secure'   => is_ssl(),
+						'httponly' => true,
+						'samesite' => 'Lax',
+					)
+				);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Checks if the current request is for the homepage.
 	 *
 	 * @return bool True if the current request is for the homepage.
@@ -278,6 +373,11 @@ class Planned_Outage {
 		}
 
 		if ( is_user_logged_in() || is_login() ) {
+			return $template;
+		}
+
+		// Allow bypass via secret link if enabled.
+		if ( get_option( 'pobt_bypass_enabled', false ) && $this->has_bypass_access() ) {
 			return $template;
 		}
 
@@ -363,6 +463,7 @@ class Planned_Outage {
 	public function pobt_deactivate() {
 		delete_option( 'pobt_enabled' );
 		delete_option( 'pobt_enabled_at' );
+		delete_option( 'pobt_bypass_key' );
 	}
 }
 
