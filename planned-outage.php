@@ -133,17 +133,17 @@ class Planned_Outage {
 	 */
 	public function settings_page() {
 		$enabled        = get_option( 'pobt_enabled', false );
-		$retry_after    = get_option( 'pobt_retry_after', 3600 );
+		$retry_after    = absint( get_option( 'pobt_retry_after', 3600 ) );
 		$allow_bots     = get_option( 'pobt_allow_bots', false );
 		$bypass_enabled = get_option( 'pobt_bypass_enabled', false );
 		$template       = $this->get_maintenance_template();
 
-		// Track when maintenance was enabled.
+		// Track when maintenance was enabled (skip for pre-launch mode).
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
-		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'pobt_enabled_at' ) ) {
+		if ( isset( $_GET['settings-updated'] ) && $enabled && 0 !== $retry_after && ! get_option( 'pobt_enabled_at' ) ) {
 			update_option( 'pobt_enabled_at', time() );
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
-		} elseif ( isset( $_GET['settings-updated'] ) && ! $enabled ) {
+		} elseif ( isset( $_GET['settings-updated'] ) && ( ! $enabled || 0 === $retry_after ) ) {
 			delete_option( 'pobt_enabled_at' );
 		}
 
@@ -189,6 +189,7 @@ class Planned_Outage {
 						<th scope="row">Expected Duration</th>
 						<td>
 							<select name="pobt_retry_after">
+								<option value="0" <?php selected( $retry_after, 0 ); ?>>Pre-Launch (indefinite)</option>
 								<option value="1800" <?php selected( $retry_after, 1800 ); ?>>30 minutes</option>
 								<option value="3600" <?php selected( $retry_after, 3600 ); ?>>1 hour</option>
 								<option value="7200" <?php selected( $retry_after, 7200 ); ?>>2 hours</option>
@@ -197,7 +198,7 @@ class Planned_Outage {
 								<option value="43200" <?php selected( $retry_after, 43200 ); ?>>12 hours</option>
 								<option value="86400" <?php selected( $retry_after, 86400 ); ?>>1 day (maximum recommended)</option>
 							</select>
-							<p class="description">Tells search engines when to check back. For maintenance longer than 1 day, enable search engine access below.</p>
+							<p class="description">Tells search engines when to check back. Select Pre-Launch for sites that aren't live yet. For maintenance longer than 1 day, enable search engine access below.</p>
 						</td>
 					</tr>
 					<tr>
@@ -245,27 +246,29 @@ class Planned_Outage {
 				</form>
 			<?php endif; ?>
 
-			<?php $enabled_at = get_option( 'pobt_enabled_at', 0 ); ?>
-			<?php if ( $enabled_at ) : ?>
-				<hr style="margin: 30px 0;">
-				<h2>Duration Tracking</h2>
-				<p>Maintenance mode was enabled on: <strong><?php echo esc_html( wp_date( 'F j, Y \a\t g:i a', $enabled_at ) ); ?></strong></p>
-				<p class="description">If this date is incorrect (e.g., from a previous maintenance period), you can reset it.</p>
-				<form method="post" style="margin-top: 10px;">
-					<?php wp_nonce_field( 'pobt_reset_tracking_action' ); ?>
-					<input type="hidden" name="pobt_reset_tracking" value="1">
-					<?php submit_button( 'Reset Duration Tracking', 'secondary', 'submit', false ); ?>
-				</form>
-			<?php endif; ?>
+			<?php if ( 0 !== $retry_after ) : ?>
+				<?php $enabled_at = get_option( 'pobt_enabled_at', 0 ); ?>
+				<?php if ( $enabled_at ) : ?>
+					<hr style="margin: 30px 0;">
+					<h2>Duration Tracking</h2>
+					<p>Maintenance mode was enabled on: <strong><?php echo esc_html( wp_date( 'F j, Y \a\t g:i a', $enabled_at ) ); ?></strong></p>
+					<p class="description">If this date is incorrect (e.g., from a previous maintenance period), you can reset it.</p>
+					<form method="post" style="margin-top: 10px;">
+						<?php wp_nonce_field( 'pobt_reset_tracking_action' ); ?>
+						<input type="hidden" name="pobt_reset_tracking" value="1">
+						<?php submit_button( 'Reset Duration Tracking', 'secondary', 'submit', false ); ?>
+					</form>
+				<?php endif; ?>
 
-			<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
-				<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
-				<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
-					<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
-					<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
-					<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
-				</ul>
-			</div>
+				<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
+					<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
+					<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
+						<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
+						<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
+						<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
+					</ul>
+				</div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -392,9 +395,14 @@ class Planned_Outage {
 			exit;
 		}
 
+		$retry_after = absint( get_option( 'pobt_retry_after', 3600 ) );
+
 		nocache_headers();
 		status_header( 503 );
-		header( 'Retry-After: ' . absint( get_option( 'pobt_retry_after', 3600 ) ) );
+
+		if ( $retry_after > 0 ) {
+			header( 'Retry-After: ' . $retry_after );
+		}
 
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		global $_wp_current_template_content;
@@ -428,6 +436,11 @@ class Planned_Outage {
 	 */
 	public function duration_warning() {
 		if ( ! get_option( 'pobt_enabled', false ) ) {
+			return;
+		}
+
+		// Skip duration warnings in pre-launch mode.
+		if ( 0 === absint( get_option( 'pobt_retry_after', 3600 ) ) ) {
 			return;
 		}
 
