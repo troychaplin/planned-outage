@@ -26,8 +26,9 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 ### Options
 
 - **Enable Maintenance Mode** - Activate maintenance mode for logged-out visitors
-- **Expected Duration** - Set the Retry-After header value (30 minutes to 1 day) to tell search engines when to check back
+- **Expected Duration** - Set the Retry-After header value (30 minutes to 1 day) to tell search engines when to check back, or select Pre-Launch for sites that aren't live yet
 - **Search Engine Access** - Allow search engine bots to bypass maintenance mode and continue crawling your site
+- **Bypass Link** - Generate a secret URL that lets non-logged-in users browse the site during maintenance
 
 ### SEO Recommendations
 
@@ -35,13 +36,24 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 - **2-24 hours:** Consider enabling search engine access
 - **Over 1 day:** Always enable search engine access to prevent pages from being removed from search indexes
 
+### Pre-Launch Mode
+
+Select "Pre-Launch (indefinite)" from the Expected Duration dropdown when your site isn't live yet. This disables duration tracking, admin duration warnings, the Retry-After header, and the SEO recommendations card.
+
+### Bypass Link
+
+When enabled, a unique URL with a secret token is generated (e.g. `https://yoursite.com/?pobt_bypass=<token>`). Share this link with anyone who needs to preview the site during maintenance. A 12-hour cookie is set on first visit so they can navigate freely without needing the token on every page.
+
+You can regenerate the link at any time to invalidate the previous one.
+
 ### When Enabled
 
 - Logged-out visitors see the maintenance template with a 503 status
 - Logged-in users can browse the site normally
 - Search engine bots can optionally bypass maintenance mode
+- Non-logged-in users with a valid bypass link can browse the site normally
 - An admin bar notice indicates maintenance mode is active
-- A warning appears after 3 days if maintenance mode is still enabled
+- A warning appears after 3 days if maintenance mode is still enabled (except in pre-launch mode)
 
 ## Development
 

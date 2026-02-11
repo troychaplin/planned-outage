@@ -4,7 +4,7 @@ Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
 Requires at least: 6.3
 Tested up to: 6.9
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -21,9 +21,11 @@ Planned Outage for Block Themes is a lightweight plugin that enables maintenance
 * Create maintenance pages in the Site Editor or as theme files
 * Logged-in users bypass maintenance mode
 * Configurable expected duration (Retry-After header)
+* Pre-launch mode for sites that aren't live yet
 * Optional search engine bot access during maintenance
+* Bypass link to let non-logged-in users preview the site during maintenance
 * Admin bar indicator when maintenance mode is active
-* Duration warning after 3 days of maintenance
+* Duration warning after 3 days of maintenance (except in pre-launch mode)
 * Returns proper 503 status code for SEO
 
 **Requirements:**
@@ -36,7 +38,7 @@ Planned Outage for Block Themes is a lightweight plugin that enables maintenance
 1. Upload the plugin folder to your /wp-content/plugins/ folder.
 2. Go to the **Plugins** page and activate the plugin.
 3. Create a maintenance template (see FAQ below).
-4. Go to **Settings > Maintenance Mode** and enable it.
+4. Go to **Settings > Planned Outage** and enable it.
 
 == Frequently Asked Questions ==
 
@@ -49,11 +51,15 @@ You have two options:
 
 = Who can see the site when maintenance mode is enabled? =
 
-All logged-in users can browse the site normally. Only logged-out visitors see the maintenance template. You can also enable search engine bots to bypass maintenance mode.
+All logged-in users can browse the site normally. Only logged-out visitors see the maintenance template. You can also enable search engine bots to bypass maintenance mode, or generate a bypass link for non-logged-in users.
 
 = What is the Expected Duration setting? =
 
-This sets the Retry-After HTTP header, which tells search engines how long to wait before checking your site again. Options range from 30 minutes to 1 day.
+This sets the Retry-After HTTP header, which tells search engines how long to wait before checking your site again. Options range from 30 minutes to 1 day. You can also select "Pre-Launch (indefinite)" for sites that aren't live yet, which disables duration tracking and admin warnings.
+
+= What is the Bypass Link? =
+
+When enabled, the plugin generates a secret URL you can share with anyone who needs to view the site during maintenance without logging in. A 12-hour cookie is set on first visit so they can navigate freely. You can regenerate the link at any time to invalidate the previous one.
 
 = Should I enable Search Engine Access? =
 
@@ -68,6 +74,12 @@ The plugin returns a 503 (Service Unavailable) status with a Retry-After header,
 Simply deactivate and delete the plugin. The plugin stores options prefixed with `dtmm_` which are removed when you delete the plugin.
 
 == Changelog ==
+
+= 1.1.0 =
+* Added bypass link feature for sharing preview access with non-logged-in users
+* Added pre-launch mode (indefinite duration) that disables time tracking and admin warnings
+* Bypass link sets a 12-hour cookie for seamless navigation
+* Regenerate bypass link to invalidate previous links
 
 = 1.0.0 =
 * Initial release
