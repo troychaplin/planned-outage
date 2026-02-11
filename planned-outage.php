@@ -23,6 +23,38 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Planned_Outage {
 
 	/**
+	 * Known full-page cache plugins and their flush functions.
+	 *
+	 * @var array
+	 */
+	private $cache_plugins = array(
+		'surge'           => array(
+			'constant' => 'SURGE_CACHE_DIR',
+			'label'    => 'Surge',
+		),
+		'wp-super-cache'  => array(
+			'function' => 'wp_cache_clear_cache',
+			'label'    => 'WP Super Cache',
+		),
+		'w3-total-cache'  => array(
+			'function' => 'w3tc_flush_all',
+			'label'    => 'W3 Total Cache',
+		),
+		'wp-fastest-cache' => array(
+			'class_method' => array( 'WpFastestCache', 'deleteCache' ),
+			'label'        => 'WP Fastest Cache',
+		),
+		'litespeed-cache' => array(
+			'class_method' => array( 'LiteSpeed_Cache_API', 'purge_all' ),
+			'label'        => 'LiteSpeed Cache',
+		),
+		'wp-rocket'       => array(
+			'function' => 'rocket_clean_domain',
+			'label'    => 'WP Rocket',
+		),
+	);
+
+	/**
 	 * List of search engine bot user agent strings to detect.
 	 *
 	 * @var array
@@ -147,6 +179,12 @@ class Planned_Outage {
 			delete_option( 'pobt_enabled_at' );
 		}
 
+		// Flush full-page caches when settings are saved.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
+		if ( isset( $_GET['settings-updated'] ) ) {
+			$this->flush_caches();
+		}
+
 		// Generate or remove bypass key based on setting.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
 		if ( isset( $_GET['settings-updated'] ) && $bypass_enabled && ! get_option( 'pobt_bypass_key' ) ) {
@@ -158,6 +196,19 @@ class Planned_Outage {
 		?>
 		<div class="wrap">
 			<h1>Planned Outage for Block Themes</h1>
+
+				<?php
+			$detected_caches = $this->detect_cache_plugins();
+			if ( $enabled && ! empty( $detected_caches ) ) :
+				?>
+				<div class="notice notice-warning">
+					<p>
+						<strong>Cache Detected:</strong>
+						<?php echo esc_html( implode( ', ', $detected_caches ) ); ?> is active. Full-page caching can prevent the maintenance page from displaying to visitors.
+						If maintenance mode is not working, flush your cache or temporarily deactivate your caching plugin. Caches are automatically flushed when these settings are saved.
+					</p>
+				</div>
+			<?php endif; ?>
 
 			<?php if ( ! $template ) : ?>
 				<div class="notice notice-error">
@@ -365,14 +416,6 @@ class Planned_Outage {
 	 * @return string The template path to use.
 	 */
 	public function maybe_show_maintenance( $template ) {
-		// TEMP DEBUG — outputs HTML comments visible in page source. Remove after troubleshooting.
-		add_action(
-			'wp_footer',
-			function () {
-				echo '<!-- POBT DEBUG: method reached, enabled=' . esc_html( get_option( 'pobt_enabled', 'NOT SET' ) ) . ' -->';
-			}
-		);
-
 		if ( ! get_option( 'pobt_enabled', false ) ) {
 			return $template;
 		}
@@ -380,12 +423,6 @@ class Planned_Outage {
 		$maintenance_template = $this->get_maintenance_template();
 
 		if ( ! $maintenance_template ) {
-			add_action(
-				'wp_footer',
-				function () {
-					echo '<!-- POBT DEBUG: no maintenance template found -->';
-				}
-			);
 			return $template;
 		}
 
@@ -395,12 +432,6 @@ class Planned_Outage {
 
 		// Allow bypass via secret link if enabled.
 		if ( get_option( 'pobt_bypass_enabled', false ) && $this->has_bypass_access() ) {
-			add_action(
-				'wp_footer',
-				function () {
-					echo '<!-- POBT DEBUG: bypass access granted -->';
-				}
-			);
 			return $template;
 		}
 
@@ -487,6 +518,68 @@ class Planned_Outage {
 				</p>
 			</div>
 			<?php
+		}
+	}
+
+	/**
+	 * Detects active full-page cache plugins.
+	 *
+	 * @return array List of detected cache plugin labels.
+	 */
+	private function detect_cache_plugins() {
+		$detected = array();
+
+		foreach ( $this->cache_plugins as $plugin ) {
+			if ( isset( $plugin['constant'] ) && defined( $plugin['constant'] ) ) {
+				$detected[] = $plugin['label'];
+			} elseif ( isset( $plugin['function'] ) && function_exists( $plugin['function'] ) ) {
+				$detected[] = $plugin['label'];
+			} elseif ( isset( $plugin['class_method'] ) && is_callable( $plugin['class_method'] ) ) {
+				$detected[] = $plugin['label'];
+			}
+		}
+
+		return $detected;
+	}
+
+	/**
+	 * Attempts to flush known full-page caches.
+	 */
+	private function flush_caches() {
+		// WordPress cache flush.
+		wp_cache_flush();
+
+		foreach ( $this->cache_plugins as $plugin ) {
+			if ( isset( $plugin['function'] ) && function_exists( $plugin['function'] ) ) {
+				call_user_func( $plugin['function'] );
+			} elseif ( isset( $plugin['class_method'] ) && is_callable( $plugin['class_method'] ) ) {
+				call_user_func( $plugin['class_method'] );
+			}
+		}
+
+		// Surge: delete cache directory contents if available.
+		if ( defined( 'SURGE_CACHE_DIR' ) && is_dir( SURGE_CACHE_DIR ) ) {
+			$this->delete_directory_contents( SURGE_CACHE_DIR );
+		}
+	}
+
+	/**
+	 * Recursively deletes directory contents without removing the directory itself.
+	 *
+	 * @param string $dir Path to the directory.
+	 */
+	private function delete_directory_contents( $dir ) {
+		$files = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $dir, RecursiveDirectoryIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ( $files as $file ) {
+			if ( $file->isDir() ) {
+				rmdir( $file->getRealPath() );
+			} else {
+				unlink( $file->getRealPath() );
+			}
 		}
 	}
 
