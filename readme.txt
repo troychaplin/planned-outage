@@ -38,7 +38,7 @@ Planned Outage for Block Themes is a lightweight plugin that enables maintenance
 1. Upload the plugin folder to your /wp-content/plugins/ folder.
 2. Go to the **Plugins** page and activate the plugin.
 3. Create a maintenance template (see FAQ below).
-4. Go to **Settings > Maintenance Mode** and enable it.
+4. Go to **Settings > Planned Outage** and enable it.
 
 == Frequently Asked Questions ==
 
