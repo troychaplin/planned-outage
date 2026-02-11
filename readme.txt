@@ -27,6 +27,7 @@ Planned Outage for Block Themes is a lightweight plugin that enables maintenance
 * Admin bar indicator when maintenance mode is active
 * Duration warning after 3 days of maintenance (except in pre-launch mode)
 * Returns proper 503 status code for SEO
+* Cache plugin detection with admin warning and automatic cache flushing
 
 **Requirements:**
 
@@ -69,11 +70,25 @@ For short maintenance periods (under 2 hours), the default settings are fine. Fo
 
 The plugin returns a 503 (Service Unavailable) status with a Retry-After header, which tells search engines the site is temporarily unavailable.
 
+= Will this work with caching plugins? =
+
+The plugin detects popular full-page cache plugins (Surge, WP Super Cache, W3 Total Cache, WP Fastest Cache, LiteSpeed Cache, WP Rocket) and displays a warning on the settings page when one is active. Caches are automatically flushed when settings are saved to ensure the maintenance page is served immediately.
+
+Server-level caches (Nginx FastCGI cache, Varnish, Cloudflare, etc.) cannot be detected or flushed by the plugin. If maintenance mode is not working and you use server-level caching, flush that cache manually.
+
 = How to uninstall the plugin? =
 
-Simply deactivate and delete the plugin. The plugin stores options prefixed with `dtmm_` which are removed when you delete the plugin.
+Simply deactivate and delete the plugin. The plugin stores options prefixed with `pobt_` which are removed when you deactivate the plugin.
 
 == Changelog ==
+
+= Unreleased =
+* Added cache plugin detection with admin warning when maintenance mode is active
+* Added automatic cache flushing when plugin settings are saved
+* Added support for detecting Surge, WP Super Cache, W3 Total Cache, WP Fastest Cache, LiteSpeed Cache, and WP Rocket
+* Added fallback cache detection via advanced-cache.php dropin and wp-content/cache/ directory
+* Added no-cache headers on all bypass responses to prevent reverse proxy cache poisoning
+* Fixed bypass link, logged-in user, and bot responses poisoning server-level caches
 
 = 1.1.0 =
 * Added bypass link feature for sharing preview access with non-logged-in users
