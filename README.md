@@ -55,6 +55,16 @@ You can regenerate the link at any time to invalidate the previous one.
 - An admin bar notice indicates maintenance mode is active
 - A warning appears after 3 days if maintenance mode is still enabled (except in pre-launch mode)
 
+### Cache Compatibility
+
+Full-page caching plugins can interfere with maintenance mode by serving cached pages to visitors instead of the maintenance template. The plugin includes built-in detection and handling for this:
+
+- **Automatic detection** of popular cache plugins (Surge, WP Super Cache, W3 Total Cache, WP Fastest Cache, LiteSpeed Cache, WP Rocket) with a fallback that detects any active `advanced-cache.php` dropin or populated `wp-content/cache/` directory
+- **Admin warning** displayed on the settings page when a cache plugin is detected and maintenance mode is enabled
+- **Automatic cache flushing** when settings are saved, ensuring the maintenance page is served immediately
+
+**Note:** Server-level caches (Nginx FastCGI cache, Varnish, Cloudflare, etc.) operate outside of WordPress and cannot be detected or flushed by the plugin. If maintenance mode is not working and you use server-level caching, you will need to flush that cache manually.
+
 ## Development
 
 ### Prerequisites
