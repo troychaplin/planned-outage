@@ -427,16 +427,19 @@ class Planned_Outage {
 		}
 
 		if ( is_user_logged_in() || is_login() ) {
+			nocache_headers();
 			return $template;
 		}
 
 		// Allow bypass via secret link if enabled.
 		if ( get_option( 'pobt_bypass_enabled', false ) && $this->has_bypass_access() ) {
+			nocache_headers();
 			return $template;
 		}
 
 		// Allow search engine bots through if enabled.
 		if ( get_option( 'pobt_allow_bots', false ) && $this->is_search_engine_bot() ) {
+			nocache_headers();
 			return $template;
 		}
 
