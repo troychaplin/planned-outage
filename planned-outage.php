@@ -4,7 +4,7 @@
  * Description:       Simple maintenance mode for block themes. Activate, create a templates/maintenance.html and style to match your brand.
  * Requires at least: 6.6
  * Requires PHP:      7.3
- * Version:           1.2.1
+ * Version:           1.3.0
  * Author:            Troy Chaplin
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
