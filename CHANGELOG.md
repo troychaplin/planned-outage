@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0]
+
+### Added
+
+- Uninstall hook that removes all plugin options from the database when the plugin is deleted
+
+### Changed
+
+- Minimum PHP version bumped from 7.0 to 7.3, matching the actual requirement of the array-syntax `setcookie()` call used by the bypass link feature
+- Minimum WordPress version bumped from 6.3 to 6.6, aligning the plugin header with the existing phpcs.xml target
+- Homepage detection now uses WordPress conditionals `is_front_page()` and `is_home()` instead of raw URL string parsing, improving reliability on subdirectory installs and multisite
+- Template canvas path now uses the `WPINC` constant instead of the hardcoded string `wp-includes`, matching WordPress core convention
+
 ## [1.2.1]
 
 ### Fixed

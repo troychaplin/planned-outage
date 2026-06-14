@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Planned Outage for Block Themes
  * Description:       Simple maintenance mode for block themes. Activate, create a templates/maintenance.html and style to match your brand.
- * Requires at least: 6.3
- * Requires PHP:      7.0
+ * Requires at least: 6.6
+ * Requires PHP:      7.3
  * Version:           1.2.1
  * Author:            Troy Chaplin
  * License:           GPL-2.0-or-later
@@ -40,7 +40,7 @@ class Planned_Outage {
 			'function' => 'w3tc_flush_all',
 			'label'    => 'W3 Total Cache',
 		),
-		'wp-fastest-cache'  => array(
+		'wp-fastest-cache' => array(
 			'class_method' => array( 'WpFastestCache', 'deleteCache' ),
 			'label'        => 'WP Fastest Cache',
 		),
@@ -80,6 +80,7 @@ class Planned_Outage {
 		add_action( 'admin_bar_menu', array( $this, 'admin_bar_notice' ), 100 );
 		add_action( 'admin_notices', array( $this, 'duration_warning' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'pobt_deactivate' ) );
+		register_uninstall_hook( __FILE__, array( 'Planned_Outage', 'pobt_uninstall' ) );
 	}
 
 	/**
@@ -198,9 +199,9 @@ class Planned_Outage {
 			<h1>Planned Outage for Block Themes</h1>
 
 				<?php
-			$detected_caches = $this->detect_cache_plugins();
-			if ( $enabled && ! empty( $detected_caches ) ) :
-				?>
+				$detected_caches = $this->detect_cache_plugins();
+				if ( $enabled && ! empty( $detected_caches ) ) :
+					?>
 				<div class="notice notice-warning">
 					<p>
 						<strong>Cache Detected:</strong>
@@ -208,7 +209,7 @@ class Planned_Outage {
 						If maintenance mode is not working, flush your cache or temporarily deactivate your caching plugin. Caches are automatically flushed when these settings are saved.
 					</p>
 				</div>
-			<?php endif; ?>
+				<?php endif; ?>
 
 			<?php if ( ! $template ) : ?>
 				<div class="notice notice-error">
@@ -397,19 +398,6 @@ class Planned_Outage {
 	}
 
 	/**
-	 * Checks if the current request is for the homepage.
-	 *
-	 * @return bool True if the current request is for the homepage.
-	 */
-	private function is_homepage() {
-		$request_path = isset( $_SERVER['REQUEST_URI'] ) ? rtrim( strtok( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), '?' ), '/' ) : '';
-		$home_url     = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
-		$home_path    = rtrim( $home_url ? $home_url : '', '/' );
-
-		return $request_path === $home_path;
-	}
-
-	/**
 	 * Conditionally shows the maintenance template to logged-out users.
 	 *
 	 * @param string $template The path to the template file.
@@ -444,7 +432,7 @@ class Planned_Outage {
 		}
 
 		// Redirect to homepage if not already there.
-		if ( ! $this->is_homepage() ) {
+		if ( ! is_front_page() && ! is_home() ) {
 			wp_safe_redirect( home_url( '/' ) );
 			exit;
 		}
@@ -469,12 +457,12 @@ class Planned_Outage {
 
 		// Reset query flags so get_the_block_template_html() does not enter the
 		// singular post loop which would set up the homepage post data.
-		$wp_query->is_singular  = false;
-		$wp_query->is_page      = false;
-		$wp_query->is_home      = false;
+		$wp_query->is_singular   = false;
+		$wp_query->is_page       = false;
+		$wp_query->is_home       = false;
 		$wp_query->is_front_page = false;
 
-		return wp_normalize_path( ABSPATH . 'wp-includes/template-canvas.php' );
+		return ABSPATH . WPINC . '/template-canvas.php';
 	}
 
 	/**
@@ -632,6 +620,18 @@ class Planned_Outage {
 		delete_option( 'pobt_enabled' );
 		delete_option( 'pobt_enabled_at' );
 		delete_option( 'pobt_bypass_key' );
+	}
+
+	/**
+	 * Removes all plugin options on uninstall.
+	 */
+	public static function pobt_uninstall() {
+		delete_option( 'pobt_enabled' );
+		delete_option( 'pobt_enabled_at' );
+		delete_option( 'pobt_bypass_key' );
+		delete_option( 'pobt_retry_after' );
+		delete_option( 'pobt_allow_bots' );
+		delete_option( 'pobt_bypass_enabled' );
 	}
 }
 
