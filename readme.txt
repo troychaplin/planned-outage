@@ -3,7 +3,7 @@
 Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
 Requires at least: 6.3
-Tested up to: 6.9
+Tested up to: 7.0
 Stable tag: 1.3.0
 Requires PHP: 7.0
 License: GPLv2 or later
