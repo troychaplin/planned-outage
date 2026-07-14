@@ -2,10 +2,10 @@
 
 Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
-Requires at least: 6.3
+Requires at least: 6.6
 Tested up to: 7.0
-Stable tag: 1.3.0
-Requires PHP: 7.0
+Stable tag: 1.4.0
+Requires PHP: 7.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,8 +19,9 @@ Planned Outage for Block Themes is a lightweight plugin that enables maintenance
 
 * Uses native block theme templates
 * Create maintenance pages in the Site Editor or as theme files
+* Schedule outage windows with a start and end time — maintenance turns on and off automatically
 * Logged-in users bypass maintenance mode
-* Configurable expected duration (Retry-After header)
+* Configurable expected duration (Retry-After header); during a scheduled window the header reflects the time remaining automatically
 * Pre-launch mode for sites that aren't live yet
 * Optional search engine bot access during maintenance
 * Bypass link to let non-logged-in users preview the site during maintenance
@@ -31,7 +32,7 @@ Planned Outage for Block Themes is a lightweight plugin that enables maintenance
 
 **Requirements:**
 
-* WordPress 6.3 or higher
+* WordPress 6.6 or higher
 * A block theme (like Twenty Twenty-Five)
 
 == Installation ==
@@ -49,6 +50,14 @@ You have two options:
 
 1. **Site Editor:** Go to Appearance > Editor > Templates, create a new template named "maintenance"
 2. **Theme file:** Add a `maintenance.html` file to your theme's `/templates/` folder
+
+= How does scheduling work? =
+
+Set a start and end date/time under Settings > Planned Outage (times are entered in your site's timezone). Maintenance mode activates automatically when the window begins and deactivates when it ends — no manual toggling and no reliance on WP-Cron: the window is checked on every request, so the switch is exact. The manual toggle still works independently; maintenance is active if either the toggle is on or the current time is inside the window. During a scheduled window the Retry-After header automatically reflects the time remaining.
+
+= Does the maintenance template show during WordPress core, plugin, or theme updates? =
+
+No, and this is a WordPress limitation rather than a plugin bug. During a real update WordPress creates a `.maintenance` file and ends the request very early in its boot process — before any plugin code loads — showing its built-in "Briefly unavailable for scheduled maintenance" screen. No plugin can render a block template at that point. These windows are short (WordPress considers maintenance over after 10 minutes) and only occur during actual updates. If you want a custom page for those moments, WordPress supports a hand-made `wp-content/maintenance.php` drop-in, which is independent of this plugin.
 
 = Who can see the site when maintenance mode is enabled? =
 
@@ -82,14 +91,32 @@ Simply deactivate and delete the plugin. The plugin stores options prefixed with
 
 == Changelog ==
 
-= Unreleased =
+= 1.4.0 =
+* Added scheduled outage windows with start and end date/time, entered in the site timezone
+* Added automatic activation/deactivation at window boundaries, evaluated on every request (no WP-Cron dependency)
+* Added dynamic Retry-After header during scheduled windows, reflecting the time remaining
+* Added schedule status to the settings page and admin bar (upcoming, active until, past window)
+* Added best-effort cache flushing at scheduled window boundaries via WP-Cron
+* Changed plugin structure: split single file into a bootstrap plus includes/ classes
+* Changed all admin strings to be translatable
+* Fixed readme requirements (WordPress 6.6, PHP 7.3) to match the plugin header
+
+= 1.3.0 =
+* Added uninstall hook that removes all plugin options when the plugin is deleted
+* Changed minimum PHP version from 7.0 to 7.3 and minimum WordPress version from 6.3 to 6.6
+* Changed homepage detection to use is_front_page() and is_home() conditionals
+* Changed template canvas path to use the WPINC constant
+
+= 1.2.1 =
+* Fixed maintenance template not rendering when a static front page is set in Settings > Reading
+
+= 1.2.0 =
 * Added cache plugin detection with admin warning when maintenance mode is active
 * Added automatic cache flushing when plugin settings are saved
 * Added support for detecting Surge, WP Super Cache, W3 Total Cache, WP Fastest Cache, LiteSpeed Cache, and WP Rocket
 * Added fallback cache detection via advanced-cache.php dropin and wp-content/cache/ directory
 * Added no-cache headers on all bypass responses to prevent reverse proxy cache poisoning
 * Fixed bypass link, logged-in user, and bot responses poisoning server-level caches
-* Fixed maintenance template not rendering when a static front page is set in Settings > Reading
 
 = 1.1.0 =
 * Added bypass link feature for sharing preview access with non-logged-in users

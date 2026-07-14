@@ -6,8 +6,8 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 
 ## Requirements
 
-- WordPress 6.3+
-- PHP 7.0+
+- WordPress 6.6+
+- PHP 7.3+
 - A block theme
 
 ## Installation
@@ -26,7 +26,8 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 ### Options
 
 - **Enable Maintenance Mode** - Activate maintenance mode for logged-out visitors
-- **Expected Duration** - Set the Retry-After header value (30 minutes to 1 day) to tell search engines when to check back, or select Pre-Launch for sites that aren't live yet
+- **Scheduled Outage Window** - Set a start and end date/time (in the site timezone) and maintenance mode activates and deactivates automatically; works alongside the manual toggle
+- **Expected Duration** - Set the Retry-After header value (30 minutes to 1 day) to tell search engines when to check back, or select Pre-Launch for sites that aren't live yet; during a scheduled window the header automatically reflects the time remaining
 - **Search Engine Access** - Allow search engine bots to bypass maintenance mode and continue crawling your site
 - **Bypass Link** - Generate a secret URL that lets non-logged-in users browse the site during maintenance
 
@@ -54,6 +55,14 @@ You can regenerate the link at any time to invalidate the previous one.
 - Non-logged-in users with a valid bypass link can browse the site normally
 - An admin bar notice indicates maintenance mode is active
 - A warning appears after 3 days if maintenance mode is still enabled (except in pre-launch mode)
+
+### Scheduled Outage Windows
+
+Set a start and end date/time on the settings page to schedule maintenance in advance. Times are entered in the site timezone and stored as UTC. The window is checked on every request, so activation and deactivation are exact and never depend on WP-Cron — cron is used only for best-effort cache flushing at the window boundaries. Expired windows remain visible on the settings page for reference and can be overwritten with new dates.
+
+### WordPress Core Updates
+
+The maintenance template cannot be shown during real WordPress core/plugin/theme updates. WordPress creates a `.maintenance` file and ends those requests before any plugin code loads, showing its built-in maintenance screen instead. This is a WordPress load-order constraint, not a plugin limitation — no plugin can render a block template at that point. Those windows last at most 10 minutes.
 
 ### Cache Compatibility
 
